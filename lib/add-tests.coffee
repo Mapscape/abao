@@ -73,6 +73,14 @@ addTests = (raml, tests, parent, callback, testFactory) ->
             test.request.body = JSON.parse api.body['application/json']?.example
           catch
             console.warn "invalid request example of #{test.name}"
+
+        else if api.body?['application/hal+json']
+          test.request.headers['Content-Type'] = 'application/hal+json'
+          try
+            test.request.body = JSON.parse api.body['application/hal+json']?.example
+          catch
+            console.warn "invalid request example of #{test.name}"
+            
         test.request.params = params
 
         # Update test.response
@@ -80,7 +88,9 @@ addTests = (raml, tests, parent, callback, testFactory) ->
         test.response.schema = null
         if (res?.body?['application/json']?.schema)
           test.response.schema = parseSchema res.body['application/json'].schema
-        
+        else if (res?.body?['application/hal+json']?.schema)
+          test.response.schema = parseSchema res.body['application/hal+json'].schema
+
       callback()
     , (err) ->
       return callback(err) if err
