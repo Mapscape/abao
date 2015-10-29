@@ -26,6 +26,11 @@ class TestRunner
       suite.addTest new Mocha.Test 'Skip as no hooks defined'
       return
 
+    # Exclude response status code
+    if parseInt(test.response.status) in options.excludeStatusCodes
+      suite.addTest new Mocha.Test 'Skip as response status code is excluded'
+      return
+
     # Setup hooks
     if hooks
       suite.beforeAll _.bind (done) ->
@@ -48,7 +53,7 @@ class TestRunner
     options = @options
     addTestToMocha = @addTestToMocha
     mocha = @mocha
-
+    console.log("PAARD RUN")
     async.waterfall [
       (callback) ->
         async.each tests, (test, done) ->

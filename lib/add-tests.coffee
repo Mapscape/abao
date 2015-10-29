@@ -80,7 +80,7 @@ addTests = (raml, tests, parent, callback, testFactory) ->
             test.request.body = JSON.parse api.body['application/hal+json']?.example
           catch
             console.warn "invalid request example of #{test.name}"
-            
+
         test.request.params = params
 
         # Update test.response

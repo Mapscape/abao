@@ -49,4 +49,8 @@ options =
   version:
     description: "Show version number"
 
+  excludeStatusCode:
+    alias: "x"
+    description: "Response status code to exclude.\nThis option can be used multiple times to exclude multiple status codes"
+
 module.exports = options

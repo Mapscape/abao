@@ -21,6 +21,12 @@ applyConfiguration = (config) ->
 
     return @dict
 
+  toArray = (value) ->
+    if value instanceof Array
+        value
+    else
+        value = [value]
+
   configuration =
     ramlPath: null
     server: null
@@ -34,6 +40,7 @@ applyConfiguration = (config) ->
       grep: ''
       invert: false
       'hooks-only': false
+      excludeStatusCodes: null
 
   # normalize options and config
   for own key, value of config
@@ -41,6 +48,9 @@ applyConfiguration = (config) ->
 
   # coerce some options into an dict
   configuration.options.header = coerceToDict(configuration.options.header)
+
+  # coerce to array
+  configuration.options.excludeStatusCodes = toArray(configuration.options.excludeStatusCode)
 
   # TODO(quanlong): OAuth2 Bearer Token
   if configuration.options.oauth2Token?
