@@ -49,7 +49,7 @@ applyConfiguration = (config) ->
   # coerce some options into an dict
   configuration.options.header = coerceToDict(configuration.options.header)
 
-  # coerce to array
+  # convert exclude status codes to array
   configuration.options.excludeStatusCodes = toArray(configuration.options.excludeStatusCode)
 
   # TODO(quanlong): OAuth2 Bearer Token
