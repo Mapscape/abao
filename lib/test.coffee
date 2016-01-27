@@ -59,11 +59,14 @@ class Test
 
     options = _.pick @request, 'headers', 'method'
     options['url'] = @url()
-    
+
     if @request.method != 'HEAD'
       options['body'] = JSON.stringify @request.body
-      
+
     options['qs'] = @request.query
+
+    # Do not follow redirects to allow for testing of redirect-responses
+    options['followRedirect'] = false;
 
     async.waterfall [
       (callback) ->
