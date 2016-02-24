@@ -21,9 +21,9 @@ parseHeaders = (raml) ->
   headers
 
 # addTests(raml, tests, [parent], callback, config)
-addTests = (raml, tests, parent, callback, testFactory) ->
+addTests = (raml, tests, hooks, parent, callback, testFactory) ->
 
-  # Handle 3th optional param
+  # Handle 4th optional param
   if _.isFunction(parent)
     testFactory = callback
     callback = parent
@@ -56,47 +56,47 @@ addTests = (raml, tests, parent, callback, testFactory) ->
       # Iterate response status
       for status, res of api.responses
 
-        # Append new test to tests
-        test = testFactory.create()
-        tests.push test
+        testName = "#{method} #{path} -> #{status}"
 
-        # Update test
-        test.name = "#{method} #{path} -> #{status}"
+        # Append new test to tests
+        test = testFactory.create(testName, hooks.contentTests[testName])
+        tests.push test
 
         # Update test.request
         test.request.path = path
         test.request.method = method
         test.request.headers = parseHeaders(api.headers)
-        if api.body?['application/json']
-          test.request.headers['Content-Type'] = 'application/json'
+
+        # select compatible content-type in request body (to support vendor tree types, i.e. application/vnd.api+json)
+        contentType = (type for type of api.body when type.match(/^application\/(.*\+)?json/i))?[0]
+        if contentType
+          test.request.headers['Content-Type'] = contentType
           try
-            test.request.body = JSON.parse api.body['application/json']?.example
+            test.request.body = JSON.parse api.body[contentType]?.example
           catch
             console.warn "invalid request example of #{test.name}"
-
-        else if api.body?['application/hal+json']
-          test.request.headers['Content-Type'] = 'application/hal+json'
-          try
-            test.request.body = JSON.parse api.body['application/hal+json']?.example
-          catch
-            console.warn "invalid request example of #{test.name}"
-
         test.request.params = params
 
         # Update test.response
         test.response.status = status
         test.response.schema = null
-        if (res?.body?['application/json']?.schema)
-          test.response.schema = parseSchema res.body['application/json'].schema
-        else if (res?.body?['application/hal+json']?.schema)
-          test.response.schema = parseSchema res.body['application/hal+json'].schema
+
+        if res?.body
+          # expect content-type of response body to be identical to request body
+          if contentType && res.body[contentType]?.schema
+            test.response.schema = parseSchema res.body[contentType].schema
+          # otherwise filter in responses section for compatible content-types (vendor tree, i.e. application/vnd.api+json)
+          else
+            contentType = (type for type of res.body when type.match(/^application\/(.*\+)?json/i))?[0]
+            if res.body[contentType]?.schema
+              test.response.schema = parseSchema res.body[contentType].schema
 
       callback()
     , (err) ->
       return callback(err) if err
 
       # Recursive
-      addTests resource, tests, {path, params}, callback, testFactory
+      addTests resource, tests, hooks, {path, params}, callback, testFactory
   , callback
 
 
